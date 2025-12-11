@@ -36,12 +36,9 @@ As such, incorporate this feature if you would like using your own custom-genera
 - **Real‑time bar & multi‑line charts** (30‑day history) with Chart.js  
 - **High‑contrast, dark‑mode‑friendly table** for easy reading  
 - **Optional Pushbullet alerts** for price targets  
-
----
-
-## Installation
-
-### Prerequisites
+- **Favorites System**: Easily add and remove tickers to your watchlist directly from the UI.
+- **Market Status Indicator**: Real-time indicator showing if the US market is Open, Closed, Pre-Market, or After-Hours.
+- **Search & Filter**: Quickly find tickers in your list with the new search bar.
 
 - Python 3.7+  
 - `pip`

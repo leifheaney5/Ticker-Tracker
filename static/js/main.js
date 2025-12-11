@@ -16,6 +16,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isFetching = false;
 
+    // Search Handler
+    const searchInput = document.getElementById('ticker-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const tickerDiv = row.querySelector('td:first-child div');
+                if (tickerDiv) {
+                    const ticker = tickerDiv.textContent.toLowerCase();
+                    if (ticker.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
+
     // Add Ticker Handler
     addTickerBtn.addEventListener('click', async () => {
         const symbol = newTickerSymbol.value.trim();
@@ -170,16 +191,21 @@ document.addEventListener('DOMContentLoaded', () => {
         totalTickersEl.textContent = summary.total_tickers || 0;
         activeAlertsEl.textContent = summary.alerts_triggered ? summary.alerts_triggered.length : 0;
         
-        // Simple market status logic (if more than 50% are up)
-        // This would require calculating from tickers, but for now let's just say "Open" or "Closed" based on time?
-        // Or better, "Bullish" / "Bearish" based on successful tickers
-        // Let's skip market status for now or make it simple
-        marketStatusEl.textContent = 'Active'; 
+        if (summary.market_status) {
+            marketStatusEl.textContent = summary.market_status;
+            if (summary.market_status.includes('Closed')) {
+                marketStatusEl.className = 'card-value text-danger';
+            } else if (summary.market_status.includes('Open')) {
+                marketStatusEl.className = 'card-value text-success';
+            } else {
+                marketStatusEl.className = 'card-value text-warning';
+            }
+        }
     };
 
     const renderTable = (tickers) => {
         tableBody.innerHTML = '';
-        
+
         tickers.forEach(ticker => {
             const row = document.createElement('tr');
             

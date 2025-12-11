@@ -19,11 +19,53 @@ except ImportError:
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
 import json
+from datetime import datetime, time as dt_time
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from datetime import timezone, timedelta
+    # Fallback to EST (UTC-5) if zoneinfo is missing
+    ZoneInfo = lambda x: timezone(timedelta(hours=-5))
 
 app = Flask(__name__)
 
 # ─── Ticker & Alert Configuration ──────────────────────────────────────────────
 FAVORITES_FILE = 'favorites.json'
+
+def get_market_status():
+    """Determines if the US stock market is open."""
+    try:
+        # US Market is open 9:30 AM - 4:00 PM ET, Mon-Fri
+        et_tz = None
+        try:
+            et_tz = ZoneInfo("America/New_York")
+        except Exception:
+            try:
+                et_tz = ZoneInfo("UTC") # Fallback
+            except Exception:
+                # Ultimate fallback
+                from datetime import timezone
+                et_tz = timezone.utc
+
+        now = datetime.now(et_tz)
+        
+        # Check for weekend
+        if now.weekday() >= 5: # 5=Sat, 6=Sun
+            return "Closed (Weekend)"
+            
+        current_time = now.time()
+        market_open = dt_time(9, 30)
+        market_close = dt_time(16, 0)
+        
+        if market_open <= current_time <= market_close:
+            return "Market Open"
+        elif current_time < market_open:
+            return "Pre-Market"
+        else:
+            return "After-Hours"
+    except Exception as e:
+        logger.error(f"Error checking market status: {e}")
+        return "Unknown"
 
 def load_favorites():
     """Loads tickers from the favorites.json file."""
@@ -377,6 +419,12 @@ def fetch_ticker_data_concurrent(max_workers=5):
     # Sort results by ticker symbol for consistent ordering
     results.sort(key=lambda x: x['ticker'])
     
+    market_status = "Unknown"
+    try:
+        market_status = get_market_status()
+    except Exception as e:
+        logger.error(f"Error getting market status: {e}")
+
     response_data = {
         "tickers": results,
         "summary": {
@@ -385,7 +433,8 @@ def fetch_ticker_data_concurrent(max_workers=5):
             "failed": len(failed_tickers),
             "failed_tickers": failed_tickers,
             "alerts_triggered": [r for r in results if r.get('alert_triggered', False)],
-            "last_updated": time.strftime("%Y-%m-%d %H:%M:%S")
+            "last_updated": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "market_status": market_status
         }
     }
     
@@ -433,11 +482,16 @@ def data_route():
 def add_favorite():
     try:
         data = request.json
-        ticker = data.get('ticker').upper()
-        target = float(data.get('target', 0))
-        
-        if not ticker:
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
+            
+        ticker = data.get('ticker')
+        if ticker:
+            ticker = ticker.upper()
+        else:
             return jsonify({"error": "Ticker symbol is required"}), 400
+            
+        target = float(data.get('target', 0))
             
         favorites = load_favorites()
         favorites[ticker] = target
