@@ -1,0 +1,20 @@
+2025-12-11 12:44:04,190 - __main__ - INFO - Starting Ticker Tracker application...
+2025-12-11 12:44:04,192 - __main__ - INFO - Monitoring 17 tickers
+2025-12-11 12:44:04,193 - __main__ - INFO - No yfinance cache found to clear
+2025-12-11 12:44:04,218 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-12-11 12:44:04,219 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-12-11 12:44:04,234 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-12-11 12:44:05,427 - __main__ - INFO - Starting Ticker Tracker application...
+2025-12-11 12:44:05,430 - __main__ - INFO - Monitoring 17 tickers
+2025-12-11 12:44:05,430 - __main__ - INFO - No yfinance cache found to clear
+2025-12-11 12:44:05,442 - werkzeug - WARNING -  * Debugger is active!
+2025-12-11 12:44:05,447 - werkzeug - INFO -  * Debugger PIN: 696-642-690
+2025-12-11 12:45:18,646 - werkzeug - INFO -  * Detected change in 'C:\\Users\\lphea\\Ticker_Tracker\\test_fetch.py', reloading
+2025-12-11 12:45:18,650 - werkzeug - INFO -  * Detected change in 'C:\\Users\\lphea\\Ticker_Tracker\\test_market_status.py', reloading
+2025-12-11 12:45:19,771 - werkzeug - INFO -  * Restarting with watchdog (windowsapi)
+2025-12-11 12:45:20,718 - __main__ - INFO - Starting Ticker Tracker application...
+2025-12-11 12:45:20,719 - __main__ - INFO - Monitoring 17 tickers
+2025-12-11 12:45:20,719 - __main__ - INFO - No yfinance cache found to clear
+2025-12-11 12:45:20,734 - werkzeug - WARNING -  * Debugger is active!
+2025-12-11 12:45:20,740 - werkzeug - INFO -  * Debugger PIN: 696-642-690
