@@ -16,30 +16,42 @@ try:
 except ImportError:
     YAHOOQUERY_AVAILABLE = False
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import pandas as pd
+import json
 
 app = Flask(__name__)
 
 # ─── Ticker & Alert Configuration ──────────────────────────────────────────────
-tickers = {
-    'VTI':   245,
-    'VXUS':   55,
-    'VOO':   490,
-    'AMD':    90,
-    'INTC':   18,
-    'WMT':    80,
-    'KO':     55,
-    'WM':    175,
-    'BRK-B': 475,
-    'GOOGL': 165,
-    'META':  450,
-    'AMZN':  150,
-    'AAPL':  185,
-    'NVDA':  100,
-    'MSFT':  325,
-    'TSLA':  300,
-}
+FAVORITES_FILE = 'favorites.json'
+
+def load_favorites():
+    """Loads tickers from the favorites.json file."""
+    if not os.path.exists(FAVORITES_FILE):
+        return {}
+    try:
+        with open(FAVORITES_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading favorites: {e}")
+        return {}
+
+def save_favorites(favorites):
+    """Saves tickers to the favorites.json file."""
+    try:
+        with open(FAVORITES_FILE, 'w') as f:
+            json.dump(favorites, f, indent=4)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving favorites: {e}")
+        return False
+
+tickers = load_favorites()
+
+# ─── Global Cache ──────────────────────────────────────────────────────────────
+CACHE_DURATION = 60  # seconds
+cached_data = None
+last_fetch_time = 0
 
 # ─── Logging Configuration ──────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -307,8 +319,15 @@ def fetch_one(symbol_target):
 def fetch_ticker_data_concurrent(max_workers=5):
     """
     Uses ThreadPoolExecutor to fetch all tickers in parallel.
-    Includes error handling and data validation.
+    Includes error handling, data validation, and caching.
     """
+    global cached_data, last_fetch_time
+    
+    current_time = time.time()
+    if cached_data and (current_time - last_fetch_time < CACHE_DURATION):
+        logger.info(f"Returning cached data (age: {int(current_time - last_fetch_time)}s)")
+        return cached_data
+
     logger.info("Starting ticker data fetch...")
     
     # Clear cache before fetching to prevent database corruption
@@ -358,7 +377,7 @@ def fetch_ticker_data_concurrent(max_workers=5):
     # Sort results by ticker symbol for consistent ordering
     results.sort(key=lambda x: x['ticker'])
     
-    return {
+    response_data = {
         "tickers": results,
         "summary": {
             "total_tickers": len(tickers),
@@ -369,6 +388,12 @@ def fetch_ticker_data_concurrent(max_workers=5):
             "last_updated": time.strftime("%Y-%m-%d %H:%M:%S")
         }
     }
+    
+    # Update cache
+    cached_data = response_data
+    last_fetch_time = current_time
+    
+    return response_data
 
 
 @app.route('/')
@@ -390,6 +415,10 @@ def simple():
 
 @app.route('/data')
 def data_route():
+    # Reload tickers to ensure we have the latest list
+    global tickers
+    tickers = load_favorites()
+    
     try:
         return jsonify(fetch_ticker_data_concurrent())
     except Exception as e:
@@ -400,6 +429,54 @@ def data_route():
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }), 500
 
+@app.route('/api/favorites', methods=['POST'])
+def add_favorite():
+    try:
+        data = request.json
+        ticker = data.get('ticker').upper()
+        target = float(data.get('target', 0))
+        
+        if not ticker:
+            return jsonify({"error": "Ticker symbol is required"}), 400
+            
+        favorites = load_favorites()
+        favorites[ticker] = target
+        
+        if save_favorites(favorites):
+            global tickers
+            tickers = favorites
+            # Invalidate cache so new ticker shows up immediately
+            global cached_data
+            cached_data = None
+            return jsonify({"message": f"Added {ticker}", "favorites": favorites})
+        else:
+            return jsonify({"error": "Failed to save favorite"}), 500
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/favorites/<ticker>', methods=['DELETE'])
+def remove_favorite(ticker):
+    try:
+        ticker = ticker.upper()
+        favorites = load_favorites()
+        
+        if ticker in favorites:
+            del favorites[ticker]
+            if save_favorites(favorites):
+                global tickers
+                tickers = favorites
+                # Invalidate cache
+                global cached_data
+                cached_data = None
+                return jsonify({"message": f"Removed {ticker}", "favorites": favorites})
+            else:
+                return jsonify({"error": "Failed to save changes"}), 500
+        else:
+            return jsonify({"error": "Ticker not found"}), 404
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/health')
 def health_check():
