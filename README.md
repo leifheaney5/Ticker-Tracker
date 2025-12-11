@@ -25,8 +25,8 @@ pip install a prior version of finance, using the following command: 'pip instal
 
 - this script is meant to run locally and securely. however, functionality has been put in place to allow for PushBullet API to execute automatically if desired. 
 As such, incorporate this feature if you would like using your own custom-generated API key here: https://docs.pushbullet.com/
-<img width="1061" height="1193" alt="TickerTracker-Screenshot" src="https://github.com/user-attachments/assets/47692e15-0e52-4f0c-b185-a055eeb54950" />
-<img width="1342" height="846" alt="TickerTracker-Table-Screenshot" src="https://github.com/user-attachments/assets/eac81432-dbde-407d-b814-01966592ede2" />
+<img width="2346" height="1297" alt="firefox_LJy2d6kYq8" src="https://github.com/user-attachments/assets/be3dcd5c-10bd-405b-9d55-55d696f1feac" />
+
 
 ---
 
