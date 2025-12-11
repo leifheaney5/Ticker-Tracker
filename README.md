@@ -1,4 +1,4 @@
-# Ticker Tracker – Real-Time Market Clarity Without the Clutter
+# Ticker Tracker | Real-Time Market Clarity Without the Clutter
 
 **Ticker Tracker** is a lightweight, locally‑run dashboard that fetches live market data. 
   - It runs in parallel, renders both bar‑ and multi‑line charts, and displays a high‑contrast, dark‑mode‑friendly table. 
