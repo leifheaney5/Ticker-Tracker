@@ -29,8 +29,12 @@ except ImportError:
 
 app = Flask(__name__)
 
+# ─── Logging Configuration ──────────────────────────────────────────────────────
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # ─── Ticker & Alert Configuration ──────────────────────────────────────────────
-FAVORITES_FILE = 'favorites.json'
+FAVORITES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'favorites.json')
 
 def get_market_status():
     """Determines if the US stock market is open."""
@@ -94,10 +98,6 @@ tickers = load_favorites()
 CACHE_DURATION = 60  # seconds
 cached_data = None
 last_fetch_time = 0
-
-# ─── Logging Configuration ──────────────────────────────────────────────────────
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 def clear_yfinance_cache():
     """
